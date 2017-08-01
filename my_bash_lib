@@ -1,0 +1,215 @@
+#! /bin/bash -f
+
+######################## DISPLAY & FONT HANDLING:
+#################################################
+esc="\033";
+
+# Foreground color
+blackf="${esc}[30m";   redf="${esc}[31m";    greenf="${esc}[32m";
+yellowf="${esc}[33m";  bluef="${esc}[34m";   purplef="${esc}[35m";
+cyanf="${esc}[36m";    whitef="${esc}[37m";
+
+# Background color
+blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m";
+yellowb="${esc}[43m";  blueb="${esc}[44m";   purpleb="${esc}[45m";
+cyanb="${esc}[46m";    whiteb="${esc}[47m";
+
+# Useful fonts
+boldon="${esc}[1m";    boldoff="${esc}[22m";
+italicson="${esc}[3m"; italicsoff="${esc}[23m";
+ulon="${esc}[4m";      uloff="${esc}[24m";
+invon="${esc}[7m";     invoff="${esc}[27m";
+
+reset="${esc}[0m";
+
+## bold echo
+echob()
+{
+    echo -e ${boldon}${1}${reset}
+}
+
+## yellow echo
+echo_y()
+{
+    echo -e ${yellowf}${1}${reset}
+}
+echo_yb()
+{
+    echo -e ${boldon}${yellowf}${1}${reset}
+}
+
+## red echo
+echo_r()
+{
+    echo -e ${redf}${1}${reset}
+}
+echo_rb()
+{
+    echo -e ${boldon}${redf}${1}${reset}
+}
+
+## green echo
+echo_g()
+{
+    echo -e ${greenf}${1}${reset}
+}
+echo_gb()
+{
+    echo -e ${boldon}${greenf}${1}${reset}
+}
+
+## purple echo
+echo_p()
+{
+    echo -e ${purplef}${1}${reset}
+}
+echo_pb()
+{
+    echo -e ${boldon}${purplef}${1}${reset}
+}
+
+########################## Log functions
+#########################################
+error()
+{
+    echo
+    echo -e "${boldon}${redf}ERROR:${boldoff} ${1} ${reset}"
+    echo
+}
+
+pass()
+{
+    echo
+    echo -e "${boldon}${greenf}PASS:${boldoff} ${1} ${reset}"
+    echo
+}
+
+debug()
+{
+    echo -e "${boldon}${cyanf}DBG:${boldoff}${reset}${1}"
+}
+
+warn()
+{
+    echo -e "${boldon}${cyanf}WARN:${boldoff}${reset} ${1}"
+}
+
+infos()
+{
+    echo -e "${boldon}${yellowf}INFO:${boldoff}${reset} ${1}"
+}
+
+# DBG levels:
+#  0: quiet (default)
+#  1: info
+#  2: warn
+#  3: debug
+DBG=0
+INFO=1
+WARNING=2
+DEBUG=3
+dbg()
+{
+    [ $1 -gt $DBG ] && return
+    case $1 in
+        1) infos "$2";;
+        2) warn "$2";;
+        3) debug "$2";;
+    esac
+}
+
+dbg_info()
+{
+    dbg ${INFO} "$1"
+}
+
+dbg_warn()
+{
+    dbg ${WARNING} "$1"
+}
+
+dbg_debug()
+{
+    dbg ${DEBUG} "$1"
+}
+
+QUIET=
+disp()
+{
+    [ -z "${QUIET}" ] && echo "${1}"
+}
+
+###################### Misc
+###############################
+is_answer_yes()
+{
+    local YES_TABLE=("y" "yes")
+    for yes in ${YES_TABLE[*]}
+    do
+        if [ "${1,,}" = "${yes}" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+is_in_list()
+{
+    list="${1}"
+    item="${2}"
+    for i in $list
+    do
+        if [ "${i}" = "${item}" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+inc()
+{
+    i=${1}
+    i=$(( ${i} + 1 ))
+    echo ${i}
+}
+
+do_cmd()
+{
+    echob "  $1" && eval $1
+}
+
+strlen ()		# echo ${#string} ...
+{
+    for i in "$@"; do
+        echo ${#i}
+    done
+}
+
+###################### XML parsing....
+######################################
+# Read a line using ">" to split content
+read_xml ()
+{
+    # change Input Field Separator to be ">"
+    local IFS=\>
+    # read until "<" and split using new local IFS: split put in TAG and VALUE
+    read -d \< TAG VALUE
+}
+
+# Extract value from <tag>value</tag> reading a file:
+# $1 to be the input file
+# $2 to be the tag whose value is required
+# echo "" or "value" if found.
+get_xml_tag_value()
+{
+    input=$1
+    tag=$2
+    value=""
+    while read_xml; do
+        if [[ ${TAG} = ${tag} ]]; then
+            value=${VALUE}
+            break
+        fi
+    done < ${input}
+    echo "${value}"
+}

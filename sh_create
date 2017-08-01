@@ -1,0 +1,23 @@
+#!/bin/bash
+
+################################################################################
+#                                                                              #
+# sh_create:                                                                   #
+# create an empty template to start writing my bash scripts                    #
+#                                                                              #
+################################################################################
+source my_bash_lib
+
+if [ $# -gt 0 -a $# -gt 1 ]; then
+    error "One and only one parameter needed: the name of the script to create..."
+    exit 1
+fi
+
+BINDIR="${HOME}/local/bin"
+SCRIPT_PATH="${BINDIR}/${1}"
+
+touch ${SCRIPT_PATH}
+[ ! -f ${SCRIPT_PATH} ] && error "Fail to create ${SCRIPT_PATH}" && exit 1
+chmod 755 ${SCRIPT_PATH}
+cat ${BINDIR}/template.bash > ${SCRIPT_PATH}
+kate ${SCRIPT_PATH} &
